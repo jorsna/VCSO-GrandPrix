@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCSO Grand Prix 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090d;--card:#0d1117;--card2:#111620;
+  --b1:#1c2535;--b2:#253040;
+  --txt:#eaf2ff;--muted:#506070;--faint:#18232f;
+  --red:#e8001a;--red2:#ff2244;
+  --gold:#ffd700;--silver:#b0bec5;--bronze:#cd7f32;
+  --green:#00e676;--blue:#00aaff;
+  --pit1:#a855f7;--pit2:#f97316;--finish:#ffd700;
+}
+html,body{background:var(--bg);font-family:'Barlow Condensed',sans-serif;color:var(--txt);min-height:100vh}
+.page{max-width:760px;margin:0 auto}
+
+/* HEADER */
+.hdr{background:var(--card);border-bottom:2px solid var(--red);padding:0 18px;display:flex;justify-content:space-between;align-items:center}
+.hdr-left{display:flex;align-items:center;gap:10px;padding:12px 0}
+.chq{display:grid;grid-template-columns:repeat(4,6px);gap:0;flex-shrink:0}
+.sq{width:6px;height:6px}
+.sq.w{background:#fff}.sq.b{background:#000}
+.t-main{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;letter-spacing:2px;line-height:1}
+.t-sub{font-size:10px;color:var(--muted);letter-spacing:.5px;margin-top:1px}
+.cd-row{display:flex;gap:3px;align-items:center}
+.cd-box{background:var(--faint);border:1px solid var(--b1);border-radius:3px;padding:4px 7px;min-width:36px;text-align:center}
+.cd-n{font-family:'Orbitron',monospace;font-size:16px;line-height:1;color:var(--red);font-weight:700}
+.cd-l{font-size:6.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.cd-sep{font-family:'Orbitron',monospace;font-size:13px;color:var(--b2)}
+
+/* TABS */
+.stabs{display:flex;background:var(--card);border-bottom:1px solid var(--b1)}
+.stab{flex:1;padding:9px 0;font-size:10px;font-weight:700;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'Orbitron',monospace;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:1px}
+.stab.on{color:var(--red);border-bottom-color:var(--red)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b1)}
+.kpi{background:var(--card);padding:10px 12px}
+.kl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;font-family:'Orbitron',monospace}
+.kv{font-family:'Orbitron',monospace;font-size:19px;font-weight:700;line-height:1}
+.ks{font-size:9px;color:var(--muted);margin-top:2px}
+
+.view{display:none}.view.on{display:block}
+
+/* RACE CONTROLS */
+.race-ctrl{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--b1)}
+.rc-title{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px}
+.rc-sub{font-size:10px;color:var(--muted);font-style:italic;margin-top:1px}
+.mtabs{display:flex;gap:3px}
+.mt{padding:4px 9px;font-size:9px;font-weight:700;border:1px solid var(--b1);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;font-family:'Orbitron',monospace;transition:all .2s;letter-spacing:.5px}
+.mt.on{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* TRACK */
+.track-outer{background:#050810;border-bottom:1px solid var(--b1)}
+#track-canvas{display:block;width:100%;cursor:default}
+
+/* PIT BAR */
+.pit-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b1)}
+.pit-cell{background:var(--card);padding:8px 10px;text-align:center}
+.pit-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;font-family:'Orbitron',monospace;margin-bottom:2px}
+.pit-info{font-size:9px;color:var(--muted)}
+.pit-n{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;line-height:1;margin-top:3px}
+
+/* STANDINGS */
+.standings-wrap{padding:12px 14px 16px}
+.s-title{font-size:8px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;font-family:'Orbitron',monospace}
+.drow{background:var(--card);border:1px solid var(--b1);border-radius:5px;padding:9px 12px;display:grid;grid-template-columns:32px 26px 1fr auto;gap:9px;align-items:center;margin-bottom:3px;position:relative;overflow:hidden;transition:border-color .15s;animation:rowIn .4s ease both}
+@keyframes rowIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.drow::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--b1)}
+.drow.rp1::before{background:var(--gold)}.drow.rp2::before{background:var(--silver)}.drow.rp3::before{background:var(--bronze)}
+.drow:hover{border-color:var(--b2)}
+.pos{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;text-align:center;line-height:1}
+.pos.p1c{color:var(--gold)}.pos.p2c{color:var(--silver)}.pos.p3c{color:var(--bronze)}
+.helmet-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.dinfo{min-width:0}
+.dname{font-size:13px;font-weight:700;letter-spacing:.3px;margin-bottom:4px}
+.lap-bar{height:13px;background:var(--faint);border-radius:2px;overflow:hidden;position:relative;margin-bottom:3px;display:flex;gap:1px}
+.lap-seg{flex:1;background:var(--faint);overflow:hidden;border-radius:1px}
+.lap-seg-fill{height:100%;border-radius:1px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.lap-seg-fill::after{content:'';display:block;margin-top:2px;height:3px;background:rgba(255,255,255,0.18);border-radius:1px}
+.laplabels{display:flex;justify-content:space-between;font-size:7.5px}
+.sbadge{font-size:8px;font-weight:700;padding:1px 6px;border-radius:2px;letter-spacing:.3px;text-transform:uppercase;display:inline-block;margin-bottom:3px}
+.dstat{text-align:right;flex-shrink:0}
+.dlaps{font-family:'Orbitron',monospace;font-size:19px;font-weight:700;line-height:1}
+.dgoal{font-size:9px;color:var(--muted)}
+.dgap{font-size:9px;margin-top:2px}
+.gap-p1{color:var(--green)}.gap-behind{color:var(--red2)}
+
+/* GARAGE VIEW */
+.gleg{display:flex;gap:12px;padding:9px 16px;background:var(--card);border-bottom:1px solid var(--b1);align-items:center;flex-wrap:wrap}
+.gl-item{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.gl-bar{width:12px;height:3px;border-radius:1px;flex-shrink:0}
+.gstats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b1)}
+.gstat{background:var(--card);padding:9px 12px}
+.gsl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px;font-family:'Orbitron',monospace}
+.gsn{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;line-height:1}
+.gss{font-size:9px;color:var(--muted)}
+.garage-outer{background:#050810;position:relative}
+#garage-canvas{display:block;width:100%}
+.ctip{position:absolute;background:rgba(5,8,16,.97);border:1px solid var(--b2);border-radius:4px;padding:7px 10px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:10;white-space:nowrap}
+
+/* REGISTER */
+.reg-outer{padding:12px 14px 18px}
+.reg-card{background:var(--card);border:1px solid var(--b1);border-radius:5px;padding:13px 14px;position:relative}
+.reg-card::before{content:'PIT LANE';position:absolute;top:-8px;left:14px;font-family:'Orbitron',monospace;font-size:8px;font-weight:700;letter-spacing:1.5px;color:var(--red);background:var(--card);padding:0 5px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+select,input{width:100%;padding:8px 10px;font-size:13px;background:var(--faint);border:1px solid var(--b1);border-radius:3px;color:var(--txt);outline:none;font-family:'Barlow Condensed',sans-serif;-webkit-appearance:none;transition:border-color .2s}
+select option{background:#0d1117}
+select:focus,input:focus{border-color:var(--red)}
+input::placeholder{color:var(--b2)}
+.reg-btn{width:100%;padding:10px;font-size:11px;font-weight:700;background:var(--red);color:#fff;border:none;border-radius:3px;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:2px;text-transform:uppercase;transition:background .2s}
+.reg-btn:hover{background:var(--red2)}
+.toast{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.4);color:var(--green);padding:8px 12px;border-radius:3px;font-size:10px;opacity:0;transition:opacity .3s;margin-top:7px;text-align:center;font-family:'Orbitron',monospace;letter-spacing:.5px}
+.toast.show{opacity:1}
+
+/* LOG */
+.log-outer{padding:0 14px 24px}
+.ll{font-size:8px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;font-family:'Orbitron',monospace}
+.lh{display:grid;grid-template-columns:90px 1fr 80px 90px 70px;gap:7px;padding:5px 0;border-bottom:1px solid var(--b1);font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'Orbitron',monospace}
+.lr{display:grid;grid-template-columns:90px 1fr 80px 90px 70px;gap:7px;padding:6px 0;border-bottom:1px solid var(--b1);font-size:11px;align-items:center}
+.lr:last-child{border:none}
+.lpill{display:inline-block;font-size:8px;font-weight:700;padding:1px 6px;border-radius:2px;letter-spacing:.3px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="chq">
+      <div class="sq w"></div><div class="sq b"></div><div class="sq w"></div><div class="sq b"></div>
+      <div class="sq b"></div><div class="sq w"></div><div class="sq b"></div><div class="sq w"></div>
+      <div class="sq w"></div><div class="sq b"></div><div class="sq w"></div><div class="sq b"></div>
+      <div class="sq b"></div><div class="sq w"></div><div class="sq b"></div><div class="sq w"></div>
+    </div>
+    <div>
+      <div class="t-main">VCSO Grand Prix</div>
+      <div class="t-sub">Volvo Car Stor Oslo &nbsp;&middot;&nbsp; Season Q2 2026 &nbsp;&middot;&nbsp; 60 runder</div>
+    </div>
+  </div>
+  <div class="cd-row">
+    <div class="cd-box"><div class="cd-n" id="cdd">--</div><div class="cd-l">dager</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-box"><div class="cd-n" id="cdh">--</div><div class="cd-l">t</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-box"><div class="cd-n" id="cdm">--</div><div class="cd-l">m</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-box"><div class="cd-n" id="cds">--</div><div class="cd-l">s</div></div>
+  </div>
+</div>
+
+<div class="stabs">
+  <button class="stab on" onclick="setSection('race',this)">Race</button>
+  <button class="stab" onclick="setSection('garage',this)">Garasje</button>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="kl">Race leader</div><div class="kv" id="kv-lead">&#8211;</div><div class="ks" id="ks-lead">runde 0</div></div>
+  <div class="kpi"><div class="kl">Totalt solgt</div><div class="kv" id="kv-tot">0</div><div class="ks">biler Q2</div></div>
+  <div class="kpi"><div class="kl">Fullf&#248;rt</div><div class="kv" id="kv-top">0</div><div class="ks">av 6 sj&#229;f&#248;rer</div></div>
+  <div class="kpi"><div class="kl">Race slutt om</div><div class="kv" id="kv-days">&#8211;</div><div class="ks">dager</div></div>
+</div>
+
+<!-- RACE VIEW -->
+<div class="view on" id="view-race">
+  <div class="race-ctrl">
+    <div>
+      <div class="rc-title">CHAMPIONSHIP &mdash; 60 RUNDER</div>
+      <div class="rc-sub">1 salg = 1 runde &nbsp;&middot;&nbsp; Pit stop runde 20 &amp; 40 &nbsp;&middot;&nbsp; M&#229;l: runde 60</div>
+    </div>
+    <div class="mtabs">
+      <button class="mt on" onclick="setMonth('q2',this)">Q2</button>
+      <button class="mt" onclick="setMonth('apr',this)">APR</button>
+      <button class="mt" onclick="setMonth('mai',this)">MAI</button>
+      <button class="mt" onclick="setMonth('jun',this)">JUN</button>
+    </div>
+  </div>
+  <div class="track-outer"><canvas id="track-canvas"></canvas></div>
+  <div class="pit-bar">
+    <div class="pit-cell">
+      <div class="pit-label" style="color:#22d3ee">Start / M&#229;l</div>
+      <div class="pit-info">Runde 0 / 60</div>
+      <div class="pit-n" style="color:#22d3ee" id="cnt-start">6</div>
+    </div>
+    <div class="pit-cell">
+      <div class="pit-label" style="color:var(--pit1)">Pit Stop 1</div>
+      <div class="pit-info">Runde 20</div>
+      <div class="pit-n" style="color:var(--pit1)" id="cnt-pit1">0</div>
+    </div>
+    <div class="pit-cell">
+      <div class="pit-label" style="color:var(--pit2)">Pit Stop 2</div>
+      <div class="pit-info">Runde 40</div>
+      <div class="pit-n" style="color:var(--pit2)" id="cnt-pit2">0</div>
+    </div>
+    <div class="pit-cell">
+      <div class="pit-label" style="color:var(--finish)">M&#229;lgang &#127937;</div>
+      <div class="pit-info">Runde 60</div>
+      <div class="pit-n" style="color:var(--finish)" id="cnt-finish">0</div>
+    </div>
+  </div>
+  <div class="standings-wrap">
+    <div class="s-title" id="s-title">Driver Standings &mdash; Q2 Season</div>
+    <div id="standings"></div>
+  </div>
+</div>
+
+<!-- GARAGE VIEW -->
+<div class="view" id="view-garage">
+  <div class="gleg">
+    <div class="gl-item"><div class="gl-bar" style="background:#3b82f6"></div>Ryen</div>
+    <div class="gl-item"><div class="gl-bar" style="background:#f59e0b"></div>Lillestr&#248;m</div>
+    <div class="gl-item"><div class="gl-bar" style="background:#10b981"></div>Fornebu</div>
+    <div style="margin-left:auto;font-size:10px;color:var(--muted)">Hold over bil for detaljer</div>
+  </div>
+  <div class="gstats">
+    <div class="gstat"><div class="gsl" style="color:#3b82f6">Ryen</div><div class="gsn" id="cnt-ryen" style="color:#3b82f6">0</div><div class="gss">biler i garasjen</div></div>
+    <div class="gstat"><div class="gsl" style="color:#f59e0b">Lillestr&#248;m</div><div class="gsn" id="cnt-lstr" style="color:#f59e0b">0</div><div class="gss">biler i garasjen</div></div>
+    <div class="gstat"><div class="gsl" style="color:#10b981">Fornebu</div><div class="gsn" id="cnt-fnbu" style="color:#10b981">0</div><div class="gss">biler i garasjen</div></div>
+  </div>
+  <div class="garage-outer">
+    <canvas id="garage-canvas"></canvas>
+    <div class="ctip" id="tooltip"></div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div class="reg-outer">
+  <div class="reg-card">
+    <div class="fg3">
+      <select id="sel-loc"><option value="">Team...</option><option value="ryen">Ryen</option><option value="lillestr&#248;m">Lillestr&#248;m</option><option value="fornebu">Fornebu</option></select>
+      <select id="sel-selger"><option value="">Sj&#229;f&#248;r...</option></select>
+      <select id="sel-mnd2"><option value="apr">April</option><option value="mai">Mai</option><option value="jun">Juni</option></select>
+    </div>
+    <div class="fg2">
+      <select id="sel-modell"><option value="">Modell...</option><option>EX30</option><option>EX40</option><option>EX60</option><option>EX90</option><option>EC40</option><option>ES90</option><option>XC40</option><option>XC60</option><option>XC90</option></select>
+      <input type="text" id="inp-doin" placeholder="DOIN-nummer"/>
+    </div>
+    <button class="reg-btn" onclick="registerSalg()">Box Box Box &#8212; Registrer runde</button>
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<div class="log-outer">
+  <div class="ll">Race Log</div>
+  <div class="lh"><div>DOIN</div><div>Sj&#229;f&#248;r</div><div>Modell</div><div>Team</div><div>Tid</div></div>
+  <div id="salg-log"></div>
+</div>
+</div>
+
+<script>
+var LAPS=60,PIT1=20,PIT2=40;
+var MONTHS=['apr','mai','jun'];
+var MND_NAMES={apr:'April',mai:'Mai',jun:'Juni',q2:'Q2 Season'};
+var LOC_COL={ryen:'#3b82f6','lillestr\u00f8m':'#f59e0b',fornebu:'#10b981'};
+var LOC_LBL={ryen:'Ryen','lillestr\u00f8m':'Lillestr\u00f8m',fornebu:'Fornebu'};
+
+var DCOLORS=[
+  {color:'#e8001a',bg:'rgba(232,0,26,.2)'},
+  {color:'#00aaff',bg:'rgba(0,170,255,.2)'},
+  {color:'#00e676',bg:'rgba(0,230,118,.2)'},
+  {color:'#ff8800',bg:'rgba(255,136,0,.2)'},
+  {color:'#cc44ff',bg:'rgba(204,68,255,.2)'},
+  {color:'#ffd700',bg:'rgba(255,215,0,.2)'},
+];
+
+// ─── BYTT UT DISSE NAVNENE MED EKTE SELGERE ───────────────────────
+var SELGERE=[
+  'Emma Haugen',
+  'Jakob Strand',
+  'Sigrid Moe',
+  'Anders Lie',
+  'Thea Berge',
+  'Martin Vold',
+].map(function(n,i){
+  return {
+    id:n.toLowerCase().replace(' ','_'),
+    navn:n,
+    initials:n.split(' ').map(function(x){return x[0];}).join(''),
+    color:DCOLORS[i].color,
+    bg:DCOLORS[i].bg
+  };
+});
+
+// ─── BYTT UT MED EKTE SALGSTALL ───────────────────────────────────
+var DEMO={
+  emma_haugen:  {apr:14,mai:12,jun:5},
+  jakob_strand: {apr:20,mai:11,jun:0},
+  sigrid_moe:   {apr:9, mai:13,jun:4},
+  anders_lie:   {apr:17,mai:16,jun:0},
+  thea_berge:   {apr:7, mai:8, jun:4},
+  martin_vold:  {apr:20,mai:20,jun:20},
+};
+// ──────────────────────────────────────────────────────────────────
+
+var sales=[],curMonth='q2',curSection='race',hovCar=-1;
+
+function lapsFor(id,m){
+  var d=DEMO[id]||{};
+  var base=m==='q2'?MONTHS.reduce(function(a,mo){return a+(d[mo]||0);},0):(d[m]||0);
+  var extra=sales.filter(function(s){
+    var sObj=SELGERE.find(function(x){return x.id===id;});
+    return sObj&&sObj.navn===s.selger&&(m==='q2'||s.mnd===m);
+  }).length;
+  return base+extra;
+}
+
+function setSection(s,btn){
+  curSection=s;
+  document.querySelectorAll('.stab').forEach(function(t){t.classList.remove('on');});
+  btn.classList.add('on');
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on');});
+  document.getElementById('view-'+s).classList.add('on');
+  if(s==='garage') setTimeout(drawGarage,50);
+  if(s==='race'){drawTrack();renderStandings();}
+}
+
+function setMonth(m,btn){
+  curMonth=m;
+  document.querySelectorAll('.mt').forEach(function(t){t.classList.remove('on');});
+  btn.classList.add('on');
+  renderStandings();drawTrack();updateKPIs();
+}
+
+// ── CIRCUIT ──────────────────────────────────────────────────────────
+var TW=760,TH=430;
+var CIRCUIT_NORM=[
+  [0.12,0.82],[0.28,0.82],[0.38,0.82],[0.52,0.82],
+  [0.62,0.82],[0.72,0.82],[0.82,0.80],[0.88,0.74],[0.90,0.65],
+  [0.90,0.55],[0.88,0.44],[0.85,0.36],
+  [0.80,0.28],[0.73,0.23],[0.65,0.20],
+  [0.56,0.18],[0.46,0.16],[0.36,0.16],
+  [0.24,0.17],[0.14,0.20],[0.08,0.28],[0.07,0.37],
+  [0.08,0.46],[0.10,0.54],[0.09,0.62],[0.10,0.70],
+  [0.12,0.76],[0.12,0.82],
+];
+var MX=30,MY=28;
+var CIRCUIT=CIRCUIT_NORM.map(function(p){return{x:MX+p[0]*(TW-MX*2),y:MY+p[1]*(TH-MY*2)};});
+
+function circuitPos(t){
+  t=((t%1)+1)%1;
+  var max=CIRCUIT.length,ri=t*max,i=Math.floor(ri)%max,f=ri-Math.floor(ri);
+  var a=CIRCUIT[i],b=CIRCUIT[(i+1)%max];
+  return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f};
+}
+
+function drawTrackLayer(ctx,pts,lw,style,dash){
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.closePath();ctx.strokeStyle=style;ctx.lineWidth=lw;ctx.lineJoin='round';ctx.lineCap='round';
+  if(dash) ctx.setLineDash(dash); else ctx.setLineDash([]);
+  ctx.stroke();ctx.setLineDash([]);
+}
+
+function drawTrack(){
+  var canvas=document.getElementById('track-canvas');
+  if(!canvas) return;
+  canvas.width=TW;canvas.height=TH;
+  var ctx=canvas.getContext('2d');
+
+  ctx.fillStyle='#050810';ctx.fillRect(0,0,TW,TH);
+
+  // Grid
+  ctx.save();ctx.globalAlpha=0.025;ctx.strokeStyle='#4488cc';ctx.lineWidth=1;
+  for(var x=0;x<TW;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,TH);ctx.stroke();}
+  for(var y=0;y<TH;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(TW,y);ctx.stroke();}
+  ctx.restore();
+
+  // Grandstands
+  ctx.save();ctx.globalAlpha=0.05;ctx.fillStyle='#2244aa';
+  ctx.fillRect(20,80,28,160);ctx.fillRect(20,260,28,100);ctx.fillRect(TW-48,100,28,200);ctx.restore();
+
+  // Track layers
+  drawTrackLayer(ctx,CIRCUIT,38,'rgba(0,0,0,0.7)');
+  drawTrackLayer(ctx,CIRCUIT,34,'rgba(200,0,30,0.2)');
+  drawTrackLayer(ctx,CIRCUIT,28,'#1a2535');
+  drawTrackLayer(ctx,CIRCUIT,24,'#202e40');
+  drawTrackLayer(ctx,CIRCUIT,1.5,'rgba(255,255,255,0.07)',[8,10]);
+
+  // DRS zone
+  ctx.save();ctx.globalAlpha=0.12;
+  ctx.beginPath();ctx.moveTo(CIRCUIT[0].x,CIRCUIT[0].y);
+  for(var di=1;di<=4;di++) ctx.lineTo(CIRCUIT[di].x,CIRCUIT[di].y);
+  ctx.strokeStyle='#00aaff';ctx.lineWidth=26;ctx.lineJoin='round';ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='rgba(0,170,255,0.6)';ctx.font='bold 8px Orbitron,monospace';ctx.textAlign='center';
+  ctx.fillText('DRS',CIRCUIT[2].x,CIRCUIT[2].y-20);
+
+  // Pit markers
+  function marker(frac,col,top,bot){
+    var p=circuitPos(frac);
+    ctx.beginPath();ctx.arc(p.x,p.y,18,0,Math.PI*2);
+    ctx.fillStyle=col+'20';ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,9,0,Math.PI*2);
+    ctx.fillStyle='#050810';ctx.fill();
+    ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.stroke();
+    ctx.fillStyle=col;ctx.font='bold 7px Orbitron,monospace';ctx.textAlign='center';
+    ctx.fillText(top,p.x,p.y+2.5);
+    ctx.fillStyle=col;ctx.font='bold 9px Barlow Condensed,sans-serif';
+    ctx.fillText(top==='P1'?'PIT STOP 1':top==='P2'?'PIT STOP 2':'MAL',p.x,p.y-18);
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px Barlow Condensed,sans-serif';
+    ctx.fillText(bot,p.x,p.y-7);
+  }
+  marker(1/3,'#a855f7','P1','Runde 20');
+  marker(2/3,'#f97316','P2','Runde 40');
+
+  // Start/finish
+  var sf=CIRCUIT[0],sf2=CIRCUIT[1];
+  var dx=sf2.x-sf.x,dy=sf2.y-sf.y,tl=Math.sqrt(dx*dx+dy*dy)||1;
+  var nx=-dy/tl,ny=dx/tl,ll=22;
+  for(var ci=0;ci<6;ci++){
+    ctx.fillStyle=ci%2===0?'#fff':'#000';
+    ctx.fillRect(sf.x+nx*(ci-3)*ll/3-4,sf.y+ny*(ci-3)*ll/3-6,8,6);
+  }
+  ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='bold 9px Barlow Condensed,sans-serif';
+  ctx.textAlign='center';ctx.fillText('START/MAL',sf.x+nx*36,sf.y+ny*36);
+
+  // Drivers
+  var sorted=SELGERE.map(function(s){return Object.assign({},s,{laps:lapsFor(s.id,curMonth)});})
+    .sort(function(a,b){return b.laps-a.laps;});
+  var byLap={};
+  sorted.forEach(function(s){byLap[s.laps]=byLap[s.laps]||[];byLap[s.laps].push(s.id);});
+
+  sorted.forEach(function(s){
+    var lapFrac=s.laps===0?0:(s.laps%LAPS)/LAPS;
+    var pos=circuitPos(lapFrac);
+    var group=byLap[s.laps],gi=group.indexOf(s.id);
+    var spread=(gi-(group.length-1)/2)*22;
+    var idx2=Math.min(Math.floor(lapFrac*CIRCUIT.length),CIRCUIT.length-1);
+    var next=CIRCUIT[(idx2+1)%CIRCUIT.length],curr=CIRCUIT[idx2];
+    var tx=next.x-curr.x,ty=next.y-curr.y,tlen=Math.sqrt(tx*tx+ty*ty)||1;
+    var cx=pos.x+(-ty/tlen)*spread,cy=pos.y+(tx/tlen)*spread;
+    var atF=s.laps>=LAPS,atP2=s.laps>=PIT2,atP1=s.laps>=PIT1;
+    var borderCol=atF?'#ffd700':atP2?'#f97316':atP1?'#a855f7':s.color;
+    var r=13;
+
+    if(s.laps>0){
+      ctx.save();ctx.globalAlpha=0.25;
+      var ti=Math.max(0,idx2-3);
+      var tp=circuitPos(Math.max(0,lapFrac-4/CIRCUIT.length));
+      var g2=ctx.createLinearGradient(tp.x,tp.y,cx,cy);
+      g2.addColorStop(0,'transparent');g2.addColorStop(1,s.color);
+      ctx.beginPath();ctx.moveTo(tp.x,tp.y);ctx.lineTo(cx,cy);
+      ctx.strokeStyle=g2;ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.beginPath();ctx.arc(cx,cy,r+7,0,Math.PI*2);
+    ctx.fillStyle=borderCol+'15';ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle=s.bg;ctx.fill();
+    ctx.strokeStyle=borderCol;ctx.lineWidth=atF?3:2;ctx.stroke();
+    ctx.fillStyle=s.color;ctx.font='bold 9px Barlow Condensed,sans-serif';ctx.textAlign='center';
+    ctx.fillText(s.initials,cx,cy+3.5);
+
+    var posNum=sorted.findIndex(function(x){return x.id===s.id;})+1;
+    ctx.fillStyle='rgba(5,8,16,0.88)';ctx.strokeStyle=borderCol;ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.roundRect(cx-8,cy+r+2,16,13,2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font='bold 8px Orbitron,monospace';ctx.textAlign='center';
+    ctx.fillText('P'+posNum,cx,cy+r+11);
+    ctx.fillStyle=borderCol;ctx.font='bold 7px Orbitron,monospace';
+    ctx.fillText('R'+s.laps,cx,cy+r+21);
+    if(atF){ctx.font='12px serif';ctx.fillText('\u{1F3C1}',cx,cy-r-4);}
+  });
+
+  // Sector labels
+  ctx.fillStyle='rgba(255,255,255,0.1)';ctx.font='bold 8px Orbitron,monospace';ctx.textAlign='center';
+  ctx.fillText('SEKTOR 1',CIRCUIT[2].x,CIRCUIT[2].y+36);
+  ctx.fillText('SEKTOR 2',CIRCUIT[10].x+30,CIRCUIT[10].y);
+  ctx.fillText('SEKTOR 3',CIRCUIT[22].x-30,CIRCUIT[22].y);
+  ctx.fillStyle='rgba(255,255,255,0.04)';ctx.font='bold 13px Orbitron,monospace';
+  ctx.fillText('VCSO CIRCUIT',TW/2,TH/2);
+}
+
+// ── STANDINGS ─────────────────────────────────────────────────────────
+function renderStandings(){
+  var m=curMonth;
+  document.getElementById('s-title').textContent='Driver Standings \u2014 '+MND_NAMES[m];
+  var sorted=SELGERE.map(function(s){return Object.assign({},s,{laps:lapsFor(s.id,m)});})
+    .sort(function(a,b){return b.laps-a.laps;});
+  var leader=sorted[0];
+  var posCls=['rp1','rp2','rp3'],posNumCls=['p1c','p2c','p3c'];
+
+  document.getElementById('standings').innerHTML=sorted.map(function(s,i){
+    var l=s.laps,atF=l>=LAPS,atP2=l>=PIT2,atP1=l>=PIT1;
+    var s1=Math.min(l/PIT1*100,100).toFixed(1);
+    var s2=l>=PIT1?Math.min((l-PIT1)/(PIT2-PIT1)*100,100).toFixed(1):0;
+    var s3=l>=PIT2?Math.min((l-PIT2)/(LAPS-PIT2)*100,100).toFixed(1):0;
+    var c1=atP1?'#a855f7':'#22d3ee',c2=atP2?'#f97316':'#a855f7',c3='#ffd700';
+    var stage=atF?
+      '<span class="sbadge" style="background:#ffd70022;color:#ffd700;border:1px solid #ffd70040">\u{1F3C1} FINISH</span>':
+      atP2?'<span class="sbadge" style="background:#f9731620;color:#f97316;border:1px solid #f9731640">SEKTOR 3</span>':
+      atP1?'<span class="sbadge" style="background:#a855f720;color:#a855f7;border:1px solid #a855f740">SEKTOR 2</span>':
+      '<span class="sbadge" style="background:#22d3ee20;color:#22d3ee;border:1px solid #22d3ee40">SEKTOR 1</span>';
+    var gap=i===0?'LEADER':'+'+(leader.laps-s.laps)+' runder';
+    var gapCls=i===0?'gap-p1':'gap-behind';
+    return '<div class="drow '+(i<3?posCls[i]:'')+(i<3?' ':'')+'" style="animation-delay:'+(i*0.07)+'s">'+
+      '<div class="pos '+(i<3?posNumCls[i]:'')+'">P'+(i+1)+'</div>'+
+      '<div class="helmet-av" style="background:'+s.bg+';border:2px solid '+(atF?'#ffd700':s.color)+';color:'+s.color+'">'+s.initials+'</div>'+
+      '<div class="dinfo">'+
+        '<div class="dname">'+s.navn+'</div>'+
+        stage+
+        '<div class="lap-bar">'+
+          '<div class="lap-seg"><div class="lap-seg-fill" style="width:'+s1+'%;background:'+c1+'"></div></div>'+
+          '<div class="lap-seg"><div class="lap-seg-fill" style="width:'+s2+'%;background:'+c2+'"></div></div>'+
+          '<div class="lap-seg"><div class="lap-seg-fill" style="width:'+s3+'%;background:'+c3+'"></div></div>'+
+        '</div>'+
+        '<div class="laplabels">'+
+          '<span style="color:#22d3ee">R0</span>'+
+          '<span style="color:#a855f7">Pit 1 (R20)</span>'+
+          '<span style="color:#f97316">Pit 2 (R40)</span>'+
+          '<span style="color:#ffd700">M\u00e5l (R60)</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="dstat">'+
+        '<div class="dlaps" style="color:'+(atF?'#ffd700':s.color)+'">R'+l+'</div>'+
+        '<div class="dgoal">/ '+LAPS+' runder</div>'+
+        '<div class="dgap '+gapCls+'">'+gap+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  var all=SELGERE.map(function(s){return lapsFor(s.id,'q2');});
+  document.getElementById('cnt-pit1').textContent=all.filter(function(p){return p>=PIT1;}).length;
+  document.getElementById('cnt-pit2').textContent=all.filter(function(p){return p>=PIT2;}).length;
+  document.getElementById('cnt-finish').textContent=all.filter(function(p){return p>=LAPS;}).length;
+}
+
+// ── KPI ───────────────────────────────────────────────────────────────
+function updateKPIs(){
+  var sorted=SELGERE.map(function(s){return Object.assign({},s,{laps:lapsFor(s.id,curMonth)});})
+    .sort(function(a,b){return b.laps-a.laps;});
+  var tot=sorted.reduce(function(a,s){return a+s.laps;},0);
+  var atF=sorted.filter(function(s){return s.laps>=LAPS;}).length;
+  var d=Math.max(0,Math.floor((new Date('2026-06-30T23:59:59')-new Date())/86400000));
+  document.getElementById('kv-lead').textContent=sorted[0]&&sorted[0].laps>0?sorted[0].navn.split(' ')[0]:'\u2013';
+  document.getElementById('ks-lead').textContent='Runde '+(sorted[0]?sorted[0].laps:0);
+  document.getElementById('kv-tot').textContent=tot;
+  document.getElementById('kv-top').textContent=atF;
+  document.getElementById('kv-days').textContent=d;
+}
+
+// ── GARAGE ────────────────────────────────────────────────────────────
+var GW=760,GCOLS=8,CW=88,CH=56,PX=12,PY=14;
+function cRect(i){return{x:PX+i%GCOLS*(CW+3),y:PY+Math.floor(i/GCOLS)*(CH+22)};}
+function drawGarage(){
+  var cv=document.getElementById('garage-canvas');
+  if(!cv) return;
+  var n=sales.length,rows=Math.max(Math.ceil(n/GCOLS),2);
+  var H=PY+rows*(CH+22)+PY+14;
+  cv.width=GW;cv.height=H;
+  var ctx=cv.getContext('2d');
+  ctx.fillStyle='#050810';ctx.fillRect(0,0,GW,H);
+
+  for(var ri=0;ri<rows;ri++){
+    ctx.fillStyle='rgba(232,0,26,0.05)';
+    ctx.fillRect(PX,PY+ri*(CH+22)+CH+4,GW-PX*2,2);
+  }
+  for(var ci=0;ci<=GCOLS;ci++){
+    ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(PX+ci*(CW+3),PY);ctx.lineTo(PX+ci*(CW+3),H-PY);ctx.stroke();
+  }
+  for(var ei=n;ei<rows*GCOLS;ei++){
+    var er=cRect(ei);
+    ctx.strokeStyle='rgba(232,0,26,0.07)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.strokeRect(er.x+2,er.y+2,CW-4,CH-4);ctx.setLineDash([]);
+  }
+
+  sales.forEach(function(sale,si){
+    var r=cRect(si),col=LOC_COL[sale.loc]||'#3b82f6';
+    var isHov=si===hovCar;
+    ctx.fillStyle=col+'10';ctx.fillRect(r.x,r.y,CW,CH);
+    if(isHov){ctx.save();ctx.shadowColor=col;ctx.shadowBlur=16;ctx.fillStyle=col+'22';ctx.fillRect(r.x,r.y,CW,CH);ctx.restore();}
+
+    // Car icon (simple SVG-style drawn with canvas)
+    ctx.fillStyle=col+'cc';
+    // Body
+    ctx.beginPath();
+    ctx.roundRect(r.x+6,r.y+18,CW-12,18,4);
+    ctx.fill();
+    // Roof
+    ctx.fillStyle=col;
+    ctx.beginPath();
+    ctx.roundRect(r.x+18,r.y+10,CW-38,14,3);
+    ctx.fill();
+    // Windows
+    ctx.fillStyle='rgba(180,230,255,0.35)';
+    ctx.beginPath();ctx.roundRect(r.x+20,r.y+11,16,11,2);ctx.fill();
+    ctx.beginPath();ctx.roundRect(r.x+38,r.y+11,16,11,2);ctx.fill();
+    // Wheels
+    ctx.fillStyle='#111';
+    ctx.beginPath();ctx.arc(r.x+18,r.y+36,6,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(r.x+CW-18,r.y+36,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(200,210,220,0.5)';
+    ctx.beginPath();ctx.arc(r.x+18,r.y+36,3,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(r.x+CW-18,r.y+36,3,0,Math.PI*2);ctx.fill();
+    // Model label on car
+    ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='bold 7px Barlow Condensed,sans-serif';ctx.textAlign='center';
+    ctx.fillText(sale.modell,r.x+CW/2,r.y+24);
+
+    ctx.fillStyle=col;ctx.fillRect(r.x+2,r.y+CH-5,CW-4,4);
+    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='6.5px Barlow Condensed,sans-serif';ctx.textAlign='center';
+    ctx.fillText(sale.doin,r.x+CW/2,r.y+CH+12);
+    ctx.fillStyle='rgba(255,255,255,0.15)';ctx.font='6px Barlow Condensed,sans-serif';
+    ctx.fillText(sale.selger.split(' ')[0],r.x+CW/2,r.y+CH+20);
+  });
+
+  ctx.fillStyle='rgba(255,255,255,0.12)';ctx.font='10px Barlow Condensed,sans-serif';ctx.textAlign='center';
+  ctx.fillText(n+' biler i garasjen  \u00b7  '+(rows*GCOLS-n)+' ledige plasser',GW/2,H-3);
+  document.getElementById('cnt-ryen').textContent=sales.filter(function(s){return s.loc==='ryen';}).length;
+  document.getElementById('cnt-lstr').textContent=sales.filter(function(s){return s.loc==='lillestr\u00f8m';}).length;
+  document.getElementById('cnt-fnbu').textContent=sales.filter(function(s){return s.loc==='fornebu';}).length;
+}
+
+var gc=document.getElementById('garage-canvas');
+gc.addEventListener('mousemove',function(e){
+  var rect=gc.getBoundingClientRect(),sx=gc.width/rect.width;
+  var mx=(e.clientX-rect.left)*sx,my=(e.clientY-rect.top)*sx;
+  var found=-1;
+  sales.forEach(function(s,i){var r=cRect(i);if(mx>=r.x&&mx<=r.x+CW&&my>=r.y&&my<=r.y+CH)found=i;});
+  if(found!==hovCar){hovCar=found;drawGarage();}
+  var tip=document.getElementById('tooltip');
+  if(found>=0){
+    var s=sales[found],col=LOC_COL[s.loc]||'#3b82f6';
+    tip.innerHTML='<strong style="color:'+col+'">'+(LOC_LBL[s.loc]||s.loc)+'</strong><br>'+s.selger+'<br>'+s.modell+' \u00b7 '+s.doin+'<br><span style="color:var(--muted)">'+s.tid+'</span>';
+    var r=cRect(found),scale=rect.width/gc.width;
+    tip.style.left=Math.max(0,r.x*scale+CW*scale/2-80)+'px';
+    tip.style.top=Math.max(0,r.y*(rect.height/gc.height)-75)+'px';
+    tip.style.opacity='1';
+  } else tip.style.opacity='0';
+});
+gc.addEventListener('mouseleave',function(){hovCar=-1;drawGarage();document.getElementById('tooltip').style.opacity='0';});
+
+// ── REGISTER ──────────────────────────────────────────────────────────
+function populateSelgers(){
+  var sel=document.getElementById('sel-selger');
+  SELGERE.forEach(function(s){
+    var o=document.createElement('option');o.value=s.navn;o.textContent=s.navn;sel.appendChild(o);
+  });
+}
+
+function registerSalg(){
+  var loc=document.getElementById('sel-loc').value;
+  var selger=document.getElementById('sel-selger').value;
+  var modell=document.getElementById('sel-modell').value;
+  var doin=document.getElementById('inp-doin').value.trim().toUpperCase();
+  var mnd=document.getElementById('sel-mnd2').value;
+  if(!loc){showToast('Velg team!');return;}
+  if(!selger){showToast('Velg sj\u00e5f\u00f8r!');return;}
+  if(!modell){showToast('Velg modell!');return;}
+  if(!doin){showToast('Fyll inn DOIN!');return;}
+  if(sales.find(function(s){return s.doin===doin;})){showToast('DOIN '+doin+' allerede registrert!');return;}
+
+  var sObj=SELGERE.find(function(s){return s.navn===selger;});
+  if(sObj){
+    if(!DEMO[sObj.id]) DEMO[sObj.id]={apr:0,mai:0,jun:0};
+    DEMO[sObj.id][mnd]=(DEMO[sObj.id][mnd]||0)+1;
+  }
+  var now=new Date();
+  var tid=now.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit'})+' '+
+          now.toLocaleDateString('no-NO',{day:'2-digit',month:'short'});
+  sales.push({doin:doin,selger:selger,modell:modell,loc:loc,mnd:mnd,tid:tid});
+  document.getElementById('inp-doin').value='';
+  document.getElementById('sel-selger').value='';
+  document.getElementById('sel-modell').value='';
+
+  var l=sObj?lapsFor(sObj.id,curMonth):0;
+  var name=selger.split(' ')[0];
+  var msg='';
+  if(l===PIT1) msg='\u26a1 '+name+' inn for PIT STOP 1! Runde '+l+' fullf\u00f8rt!';
+  else if(l===PIT2) msg='\u26a1 '+name+' inn for PIT STOP 2! Runde '+l+' fullf\u00f8rt!';
+  else if(l>=LAPS) msg='\u{1F3C1} '+name+' KRYSSER M\u00c5LLINJEN! 60 runder!';
+  else{
+    var quips=['BOX BOX BOX!','Runde '+l+' fullf\u00f8rt!','Push push push!','Looking after the tyres!','Fastest lap candidate!'];
+    msg=name+': '+quips[l%quips.length];
+  }
+  showToast(msg);
+  renderAll();
+}
+
+function showToast(m){
+  var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},4500);
+}
+
+function renderLog(){
+  var log=document.getElementById('salg-log');
+  if(!sales.length){log.innerHTML='<div style="font-size:11px;color:var(--muted);padding:7px 0">Ingen runder kj\u00f8rt enn\u00e5</div>';return;}
+  log.innerHTML=sales.slice().reverse().map(function(s){
+    var col=LOC_COL[s.loc]||'#3b82f6';
+    return '<div class="lr">'+
+      '<div style="font-family:Orbitron,monospace;font-size:11px;color:'+col+'">'+s.doin+'</div>'+
+      '<div style="font-size:11px">'+s.selger+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+s.modell+'</div>'+
+      '<div><span class="lpill" style="background:'+col+'18;color:'+col+';border:1px solid '+col+'30">'+(LOC_LBL[s.loc]||s.loc)+'</span></div>'+
+      '<div style="font-size:9px;color:var(--muted)">'+s.tid+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function countdown(){
+  var diff=new Date('2026-06-30T23:59:59')-new Date();
+  if(diff<=0) return;
+  document.getElementById('cdd').textContent=String(Math.floor(diff/86400000)).padStart(2,'0');
+  document.getElementById('cdh').textContent=String(Math.floor((diff%86400000)/3600000)).padStart(2,'0');
+  document.getElementById('cdm').textContent=String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+  document.getElementById('cds').textContent=String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+}
+
+function renderAll(){
+  renderStandings();updateKPIs();renderLog();
+  if(curSection==='race') drawTrack();
+  if(curSection==='garage') drawGarage();
+}
+
+populateSelgers();
+renderAll();
+countdown();
+setInterval(countdown,1000);
+</script>
+</body>
+</html>
